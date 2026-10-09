@@ -12,7 +12,6 @@ app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 
 const BASE = 'https://api.restcountries.com/countries/v5';
-
 const LIST_FIELDS = 'names.common,codes.alpha_2,flag.emoji,flag.url_svg,region,subregion,capitals';
 
 const ALLOWED_FILTERS = [
@@ -26,21 +25,10 @@ const ALLOWED_FILTERS = [
 ];
 
 async function callApi(url, res) {
-  try {
-    const response = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` } });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return res.status(response.status).json({
-        error: body?.errors?.[0]?.message || 'Upstream API error.',
-      });
-    }
-    return res.json(body);
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'An error occurred while fetching country data.' });
-  }
+  const response = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` } });
+  const body = await response.json();
+  res.status(response.status).json(body);
 }
-
 
 app.get('/express/countries', (req, res) => {
   const params = new URLSearchParams();
@@ -64,9 +52,6 @@ app.get('/express/countries', (req, res) => {
 
 app.get('/express/country/:code', (req, res) => {
   const { code } = req.params;
-  if (!/^[a-z]{2}$/i.test(code)) {
-    return res.status(400).json({ error: 'Invalid country code.' });
-  }
   return callApi(`${BASE}/codes.alpha_2/${code}`, res);
 });
 
